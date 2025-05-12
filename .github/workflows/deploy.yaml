@@ -1,0 +1,77 @@
+name: Deploy Application
+
+on:
+  push:
+    branches: ['main']
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY: dancedesk/backend/prod
+  ECS_SERVICE: dancedesk-backend-service-prod
+  ECS_CLUSTER: dancedesk-backend-cluster-prod
+  TASK_DEFINITION: .aws/task-definition.json
+  CONTAINER_NAME: dancedesk-backend-container-prod
+
+jobs:
+  build-and-deploy:
+    name: Build and Deploy
+    runs-on: codebuild-dancedesk-github-runner-${{ github.run_id }}-${{ github.run_attempt }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check Node.js version
+        run: |
+          echo "👉 Checking Node.js version in the build environment"
+          node --version
+          echo "✅ Node.js version check complete"
+
+      - name: Get Database URL from Parameter Store
+        id: get-db-url
+        run: |
+          echo "🔐 Retrieving database connection string from AWS Parameter Store"
+          DB_URL=$(aws ssm get-parameter --name /dancedesk/backend/prod/DATABASE_URL --with-decryption --query 'Parameter.Value' --output text)
+          echo "::add-mask::$DB_URL" 
+          echo "DATABASE_URL=$DB_URL" >> $GITHUB_ENV
+          echo "✅ Successfully retrieved database connection string"
+
+      - name: Run Prisma Migrations
+        run: |
+          echo "📦 Installing project dependencies"
+          npm install
+          echo "✅ Dependencies installed successfully"
+
+          echo "🔄 Running Prisma database migrations"
+          npx prisma migrate deploy
+          echo "✅ Database migrations completed successfully"
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build, tag, and push backend image to Amazon ECR
+        id: build-backend-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      - name: Fill in the new image ID in the backend ECS task definition
+        id: backend-task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: ${{ env.TASK_DEFINITION }}
+          container-name: ${{ env.CONTAINER_NAME }}
+          image: ${{ steps.build-backend-image.outputs.image }}
+
+      - name: Deploy backend to Amazon ECS
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.backend-task-def.outputs.task-definition }}
+          service: ${{ env.ECS_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          wait-for-service-stability: true

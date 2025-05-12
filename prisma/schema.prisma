@@ -1,0 +1,241 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Organization {
+  id             String     @id @default(uuid())
+  name           String
+  
+  locations      Location[]
+  rooms          Room[]
+  members        Member[]
+  events         Event[]
+  seasons        Season[]
+  routines       Routine[]
+  classes        Class[]
+  
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+}
+
+model Location {
+  id             String       @id @default(uuid())
+  name           String
+  address        String
+  city           String
+  province       String
+  country        String
+  
+  organizationId String
+
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  rooms          Room[]
+  
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+model Room {
+  id               String            @id @default(uuid())
+  name             String
+  
+  organizationId   String
+  locationId       String
+
+  organization     Organization      @relation(fields: [organizationId], references: [id])
+  location         Location          @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  classOccurrences ClassOccurrence[]
+  classEvents      ClassEvent[]
+  
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+}
+
+enum MemberRole {
+  ADMIN
+  DANCER
+  TEACHER
+}
+
+model Member {
+  id             String          @id @default(uuid())
+  firstName      String
+  lastName       String
+  role           MemberRole
+  
+  organizationId String
+
+  organization   Organization    @relation(fields: [organizationId], references: [id])
+  dancer         Dancer?
+  classTeachers  ClassTeachers[]
+  
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt      
+}
+
+model Dancer {
+  memberId       String         @id
+  dateOfBirth    DateTime       @db.Date
+  
+  member         Member         @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  classDancers   ClassDancers[]
+  
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+}
+
+enum EventType {
+  BLOCK
+  CLASS
+}
+
+model Event {
+  id             String       @id @default(uuid())
+  title          String
+  colour         String       @default("#000000")
+  start          DateTime
+  end            DateTime
+  type           EventType
+  
+  organizationId String
+
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  classEvent     ClassEvent?
+  blockEvent     BlockEvent?  
+  
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+model BlockEvent {
+  eventId        String       @id
+  description    String?      
+  isFullDay      Boolean      @default(false) 
+  
+  event          Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+}
+
+model ClassEvent {
+  eventId        String       @id
+  classId        String
+  roomId         String
+
+  event          Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  class          Class        @relation(fields: [classId], references: [id], onDelete: Cascade)
+  room           Room         @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+model Season {
+  id             String       @id @default(uuid())
+  name           String
+  startDate      DateTime     @db.Date
+  endDate        DateTime     @db.Date
+  
+  organizationId String
+
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  classes        Class[]
+  
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+model Routine {
+  id             String       @id @default(uuid())
+  name           String
+  type           String
+  style          String
+  song           String
+  choreoHours    Int
+  
+  organizationId String
+
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  classes        Class[]
+  
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+model Class {
+  id               String            @id @default(uuid())
+  name             String
+  colour           String            @default("#000000")
+  startDate        DateTime          @db.Date
+  endDate          DateTime          @db.Date
+  
+  organizationId   String
+  seasonId         String?
+  routineId        String?
+
+  organization     Organization      @relation(fields: [organizationId], references: [id])
+  season           Season?           @relation(fields: [seasonId], references: [id])
+  routine          Routine?          @relation(fields: [routineId], references: [id])
+  dancers          ClassDancers[]
+  teachers         ClassTeachers[]
+  classOccurrences ClassOccurrence[]
+  classEvents      ClassEvent[]
+  
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+}
+
+model ClassDancers {
+  memberId       String
+  classId        String
+
+  @@id([memberId, classId])
+  
+  dancer         Dancer          @relation(fields: [memberId], references: [memberId], onDelete: Cascade)
+  class          Class           @relation(fields: [classId], references: [id], onDelete: Cascade)
+  
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model ClassTeachers {
+  memberId       String
+  classId        String
+
+  @@id([memberId, classId])
+  
+  member         Member          @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  class          Class           @relation(fields: [classId], references: [id], onDelete: Cascade)
+  
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+enum Weekday {
+  SUNDAY
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+}
+
+model ClassOccurrence {
+  id             String          @id @default(uuid())
+  weekday        Weekday
+  startTime      DateTime        @db.Time
+  endTime        DateTime        @db.Time
+  
+  classId        String
+  roomId         String
+
+  class          Class           @relation(fields: [classId], references: [id], onDelete: Cascade)
+  room           Room            @relation(fields: [roomId], references: [id])
+  
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+}
