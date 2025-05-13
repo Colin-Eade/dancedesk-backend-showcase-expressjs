@@ -16,7 +16,7 @@ This iteration of DanceDesk represents a significant milestone achieved by our t
 
 ### 🏆 Award-Winning Project
 
-DanceDesk, which this API serves, received multiple accolades at the Durham College IT Student Expo:
+DanceDesk, which this API serves, received multiple accolades at the Durham College IT Student Expo 2025:
 
 - **Best In Show** (tied)
 - **Best In Class** (tied)
