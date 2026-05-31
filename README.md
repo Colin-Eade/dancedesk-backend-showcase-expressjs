@@ -16,9 +16,9 @@
 
 ## Project Overview
 
-DanceDesk was conceived as a solution for dance studio management, developed as an [award-winning capstone project](https://www.linkedin.com/posts/colin-eade_three-years-of-studies-and-a-demanding-final-activity-7315047905411706881-9pvH) I significantly contributed to at Durham College. This repository specifically showcases the backend API – the portion I architected and built. As a headless backend, it provides the services for the DanceDesk React SPA (not showcased here), powering key functionalities like its scheduling system, user management, and core business operations.
+DanceDesk was conceived as a solution for dance studio management, developed as an [award-winning capstone project](https://www.linkedin.com/posts/colin-eade_three-years-of-studies-and-a-demanding-final-activity-7315047905411706881-9pvH) I significantly contributed to at Durham College. This repository showcases an early version of the MVP backend API that I built. As a headless backend, it provides the services for the DanceDesk React SPA (not showcased here), powering key functionalities like its scheduling system, user management, and core business operations.
 
-This iteration of DanceDesk represents a significant milestone achieved by our team within the timeframe of the final academic semester. It successfully demonstrates core functionalities and a robust architecture. While the project forms a strong foundation, further development and refinement would be needed to evolve it into a fully-fledged application.
+This project represented a major milestone achieved by our team within our final semester. It successfully validated our architecture and delivered a functional core system, serving as the ideal foundation to build upon.
 
 ### 🏆 Award-Winning Project
 
