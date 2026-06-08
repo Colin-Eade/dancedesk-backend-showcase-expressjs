@@ -2,8 +2,6 @@
 
 <img src="dancedesk_wordmark_logo.png" alt="DanceDesk Wordmark" width="400">
 
-# DanceDesk Backend API
-
 ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
 ![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
 ![Express.js](https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white)
@@ -14,134 +12,124 @@
 
 </div>
 
-## Project Overview
+## 🏆 Award-Winning Capstone
 
-DanceDesk was conceived as a solution for dance studio management, developed as an [award-winning capstone project](https://www.linkedin.com/posts/colin-eade_three-years-of-studies-and-a-demanding-final-activity-7315047905411706881-9pvH) I significantly contributed to at Durham College. This repository showcases an early version of the MVP backend API that I built. As a headless backend, it provides the services for the DanceDesk React SPA (not showcased here), powering key functionalities like its scheduling system, user management, and core business operations.
+<div align="center">
 
-This project represented a major milestone achieved by our team within our final semester. It successfully validated our architecture and delivered a functional core system, serving as the ideal foundation to build upon.
+<img src="dancedesk_team_awards.jpg" alt="DanceDesk team with awards at the Durham College IT Student Expo 2025" width="400">
 
-### 🏆 Award-Winning Project
+DanceDesk earned multiple awards at the **Durham College IT Student Expo 2025**
 
-DanceDesk, which this API serves, received multiple accolades at the Durham College IT Student Expo 2025:
+🥇 **Best In Show** (tied)
+🥇 **Best In Class** (tied)
+🏅 **Best Booth**
 
-- **Best In Show** (tied)
-- **Best In Class** (tied)
-- **Best Booth**
+</div>
 
-## Key API Features
+## What is DanceDesk?
 
-### Scheduling Engine
+Dance studios are businesses and like any other business, managing them can be complex. After surveying 18 studio owners across Canada, we found that **72% were still using spreadsheets or pen and paper** to build and track their schedules, and **61% were spending 4 to 12+ hours a month** on scheduling admin alone. Furthermore, administrative data was generally fragmented across spreadsheets, notebooks, emails and text messages to name a few sources. This makes it difficult to get a clear picture of studio operations.
 
-- **Conflict Detection:** Endpoints ensure rooms, teachers, and dancers are not double-booked and prevent enrollment in overlapping classes.
-- **Recurring Event Generation:** API logic to automatically create recurring class instances based on defined schedules.
+The time spent on administrative tasks and the fragmented data creates a number of problems for dance studios. It comes out of teacher planning, student attention, and the work that actually grows a studio. It shows up as last-minute changes that frustrate parents, conflicts that disrupt dancer progress, empty rooms that could have been booked, and underutilized staff that cut into margins.
 
-### Multi-tenant Architecture Support
+DanceDesk was built to address that directly. One of our core goals going into this project was to create something that directly addresses a business problem. Software afterall is really just a means to an end for useful work to be done. We spent a lot of time on the problem before writing a line of code. The survey results told us where the pain was and the platform we built was a direct response to that.
 
-- **Data Isolation:** API design ensures that data for different dance studio organizations is segregated at the database level.
+I served as the **backend developer and cloud architect** on our capstone team, and made many contributions to the frontend as the deadline approached. On the backend I designed and built the RESTful API, handling everything from authentication to a scheduling engine that enforces real-time conflict detection. On the frontend I wired up authentication and token refresh, built out the conflict detection scheduling UI, and put in significant work on styling and overall polish in the final sprint to get the product over the finish line. This repository captures the MVP backend that proved out the architecture and core functionality. This was the foundation that was iterated upon to present at the IT Student Expo.
 
-### Comprehensive & Secure Endpoints
+Read more about the project on [LinkedIn](https://www.linkedin.com/posts/colin-eade_three-years-of-studies-and-a-demanding-final-activity-7315047905411706881-9pvH).
 
-- **Authentication and Authorization:** Leverages AWS Cognito for secure user management, with JWTs protecting API routes.
-- **Full CRUD Operations:** Provides complete and well-structured endpoints for all core entities (classes, events, members, rooms, etc.).
-- **Transactional Integrity:** Employs transaction-based operations where necessary to maintain data consistency across related database operations.
-- **Validation & Error Handling:** Input validation for incoming requests and consistent, informative error responses.
+## System Architecture
 
-## Technology Stack
+The IT Expo deployment ran entirely on AWS, built around containerized services, managed infrastructure, and the AWS Well-Architected Framework. The diagram below illustrates how the pieces fit together:
 
-### Core Backend
+<div align="center">
 
-- **Node.js** with the **Express.js** framework
-- **TypeScript** for static typing, enhanced code quality, and maintainability
-- **RESTful API** architecture adhering to industry best practices
+<img src="dancedesk_aws_architecture_diagram.jpg" alt="AWS architecture diagram">
 
-### Database & Data Access
+</div>
 
-- **PostgreSQL** chosen for relational data storage
-- **Prisma ORM** utilized for type-safe database interactions and streamlined query building
-- Transaction support to ensure data integrity
+### Shown in Diagram:
 
-### Authentication & Security
+- **Route 53** — The internet's address book for DanceDesk. When someone types the domain name, Route 53 directs them to the frontend website. From there, the app communicates with the backend API behind the scenes as users interact with it.
+- **Amplify** — Hosts the frontend website that end users interact with.
+- **Application Load Balancer** — Acts as a traffic director in front of the backend API. Every incoming request passes through here, and it distributes the load across healthy backend servers — if one has a problem, it's automatically skipped.
+- **ECS with Fargate** — Runs the backend application across two separate AWS data centers simultaneously. If one goes down, the other keeps serving traffic without any manual intervention.
+- **ECR** — A private storage location for the packaged-up backend application. When a new backend server starts, it pulls the latest version of the app from here.
+- **SSM Parameter Store** — A secure vault for sensitive configuration like database passwords and API keys. Secrets stay out of the codebase and are delivered safely to each backend instance at startup.
+- **RDS PostgreSQL** — The production database where all studio data lives: schedules, members, rooms, classes. A standby copy runs in a second data center and takes over automatically if the primary fails.
+- **Cognito** — Handles all user accounts and logins. After signing in, a user receives a secure digital credential that gets attached to every request they make.
+- **CloudWatch** — Collects logs from every running backend instance. A continuous record of what the application is doing, which makes diagnosing problems possible after they happen.
 
-- **AWS Cognito** integrated for secure and scalable user identity management
-- **JWT (JSON Web Token)** based authentication for stateless and secure API access
-- **Zod** implemented for validation on API endpoints
-- **CORS** configured to manage secure cross-origin requests
+### Not Shown in Diagram:
 
-### Cloud Architecture & DevOps (for the Deployed API)
+- **Security Groups** — Firewall rules that control which services are allowed to talk to each other. The load balancer accepts traffic from the internet, but Fargate only accepts traffic from the load balancer, and RDS only accepts traffic from Fargate. Nothing reaches the database directly from outside.
+- **CI/CD Pipeline (GitHub Actions + CodeBuild)** — Every push to `main` triggers an automated deployment. The pipeline pulls the database connection string from SSM, runs any pending database migrations against the production database, builds a new Docker image tagged with the commit ID, pushes it to ECR, updates the ECS task definition to point at the new image, and deploys it. The deployment waits until the new backend instances pass their health checks before completing.
 
-- **AWS ECS with Fargate** as the container orchestration service for scalable deployment
-- **Automated CI/CD pipeline** established with **GitHub Actions** and **AWS CodeBuild**
-- **AWS ECR** for private Docker container image storage
-- **RDS PostgreSQL** instance providing the production database backend
-- **Multi-AZ configuration** with load balancing for high availability and fault tolerance
-- **Route 53** for DNS management and routing
+## Engineering Highlights
 
-## API Architecture
+### Scheduling with Conflict Detection
 
-The application adheres to a clean architecture philosophy, promoting a clear separation of concerns and modularity:
+A dance studio can't have two classes in the same room at the same time, and a teacher or dancer can't be in two places at once. These constraints need to be enforced server-side, not just at the UI layer.
 
-### Three-Tier Logical Architecture
+The scheduling service checks four dimensions before any class is created or updated: rooms, teachers, dancers, and routines. Each dimension produces a structured `ConflictGroup` with enough detail to tell the client _exactly_ what's clashing and why. For example, a room conflict response will name the conflicting class, the day, and the overlapping time window. All scheduling writes run inside database transactions so concurrent requests can't slip through the checks.
 
-1.  **Controllers:** Interface with incoming HTTP requests, handle request validation, and orchestrate responses.
-2.  **Services:** Encapsulate the core business logic, coordinating operations and interacting with data access layers.
-3.  **Data Access Layer:** Manages all database interactions, primarily through the Prisma ORM, abstracting database operations from services.
+### Multi-Tenant Data Isolation
 
-### Project Structure (Illustrative)
+The platform supports multiple dance studio organizations, and no studio should ever see another studio's data, whether through a bug, a crafted request, or a missing filter.
 
-```text
-src/
-├── config/          # Application configuration (env vars, constants)
-├── errors/          # Custom error handling classes and utilities
-├── features/        # Domain-specific feature modules
-│   ├── auth/        # Authentication, authorization, user sessions
-│   ├── classes/     # Class creation, scheduling, management
-│   ├── events/      # Calendar event logic
-│   ├── locations/   # Physical studio locations
-│   ├── members/     # User profiles (teachers, dancers, admins)
-│   ├── rooms/       # Room booking and management
-│   └── seasons/     # Seasonal scheduling and planning
-├── middleware/      # Custom Express middleware (e.g., auth, error handling)
-├── router/          # API route definitions and request routing
-└── types/           # Shared TypeScript type definitions and interfaces
-```
+Every authenticated request carries the user's `organizationId`, extracted from their JWT by the auth middleware. Services enforce tenant scoping at the query level, so every database operation filters by `organizationId` before anything else. There's no endpoint where a client can supply their own org ID; it always comes from the verified token.
 
-## Key Contributions & Ownership
+### Automated CI/CD Pipeline
 
-As the backend developer and cloud architect for the DanceDesk team project, I took sole responsibility for the entire lifecycle of the API and its cloud infrastructure:
+A few design decisions in this pipeline are worth calling out. The runner is a self-hosted AWS CodeBuild instance rather than a GitHub-hosted runner. This means the pipeline authenticates to AWS through IAM roles rather than stored secrets, which keeps credentials out of GitHub entirely. Database migrations run before the new image is built and deployed, ensuring the schema is updated before any new code that depends on it goes live. Finally, the deployment step waits for ECS to report service stability before the workflow completes. If the new instances fail their health checks, the rollout is blocked and the previous version stays in service.
 
-### Backend API Development
+### Structured Error Handling
 
-- Designed and built the complete RESTful API, defining its structure including routing, controllers, services, and data access layers.
-- Translated business requirements into an optimized PostgreSQL database schema, focusing on performance and data integrity.
-- Developed core features such as the conflict-detecting scheduling system and integrated event management.
-- Engineered the user authentication and authorization system using AWS Cognito for secure access.
-- Implemented server-side input validation with Zod and a standardized error handling framework.
+The API uses a custom error hierarchy built on an abstract `AppError` class. Each error type maps to a specific HTTP status code and produces a consistent JSON response shape. Validation errors (via Zod) carry per-field detail arrays. Scheduling conflicts carry full `ConflictGroup` breakdowns with the specific resources and overlap details. A global error handler middleware catches every thrown error, maps it through dedicated error mappers, and returns the standardized envelope. Stack traces only appear in development mode.
 
-### DevOps and Cloud Infrastructure
+## Tech Stack
 
-- Took full ownership of the AWS cloud environment, managing all aspects from initial setup and IAM to resource deployment.
-- Configured and managed the production RDS PostgreSQL database.
-- Implemented backend containerization using Docker.
-- Designed and built the automated CI/CD pipeline (GitHub Actions, AWS CodeBuild, AWS ECR, ECS with Fargate) based on AWS Well-Architected principles.
+| Layer            | Technologies                                         |
+| ---------------- | ---------------------------------------------------- |
+| **Runtime**      | Node.js 20, TypeScript (strict mode)                 |
+| **Framework**    | Express.js 4                                         |
+| **Database**     | PostgreSQL 17, Prisma ORM 6                          |
+| **Auth**         | AWS Cognito, JWT (aws-jwt-verify)                    |
+| **Validation**   | Zod                                                  |
+| **Logging**      | Pino, pino-http                                      |
+| **DevOps**       | Docker, GitHub Actions, AWS CodeBuild                |
+| **Cloud**        | ECS Fargate, RDS, ECR, ALB, Route 53, Cognito        |
+| **Code Quality** | ESLint 9 (flat config), Prettier, Husky, lint-staged |
 
-### Local Development Operations
+## My Role
 
-- Established the team's local backend development environment, including Dockerized database setups.
-- Managed database migrations, schema updates, and seeding throughout the project.
+I was the sole backend developer and cloud architect on the team, and stepped into frontend work wherever it was needed. Here's what I owned:
 
-## Lessons Learned
+**Backend & Infrastructure**
 
-Key takeaways include:
+- Designed and built the complete RESTful API, defining the routing, controllers, services, and data access layers
+- Modeled the PostgreSQL schema in Prisma, wrote all migrations, and managed seed data throughout development
+- Built the scheduling engine and its conflict detection system from scratch
+- Integrated AWS Cognito for user identity management and implemented JWT-based route protection with role-based access control
+- Set up and managed the full AWS cloud environment, including ECS, RDS, ECR, ALB, Cognito, Route 53, and IAM
+- Designed the CI/CD pipeline using GitHub Actions with CodeBuild self-hosted runners for automated build, migration, and deployment
+- Established the team's local development environment with Dockerized PostgreSQL and pgAdmin
 
-- The importance of deeply understanding the domain and business rules before writing code.
-- The inherent difficulty in accurately estimating development timelines for features with multifaceted logic.
-- The importance of clear communication and defined responsibilities in a team environment, especially when integrating frontend and backend components.
+**Frontend Contributions**
 
-This capstone project was instrumental in solidifying my skills across the full development lifecycle, from database design and API implementation to cloud deployment and DevOps practices. It has significantly bolstered my confidence in tackling real-world software engineering challenges.
+- Wired up authentication on the React frontend and implemented automatic token refresh so sessions stay valid without requiring the user to log in again
+- Built out the conflict detection and scheduling UI, connecting it to the backend's structured conflict responses so clashes surface clearly in the interface
+- Contributed significant styling work to bring the UI to a clean, functional state for the expo
+- Stepped in heavily during the final sprint to help pull everything together before the semester deadline
+
+## Reflections
+
+**Domain understanding before code.** The scheduling logic seemed straightforward until we dug into edge cases: overlapping time ranges, multi-resource conflicts, recurring events that span season boundaries. Spending time mapping the actual business rules before writing code saved significant rework later.
+
+**Estimation is harder than it looks.** Features that seem like "just CRUD" can hide surprising complexity when they intersect with scheduling rules and transactional integrity. I consistently underestimated these at first, and got better at flagging that uncertainty early instead of committing to deadlines I couldn't keep.
+
+**Clear team boundaries matter.** As the sole backend developer working alongside frontend developers, having clear API contracts and open communication about what was ready (and what wasn't) was the difference between smooth integration and blocked features.
 
 ---
 
-**Note on Running the API:**
-This project was developed as an academic capstone and relies on AWS and specific environment configurations for full functionality. As such, direct local execution of the complete, connected system from this repository alone is complex and not intended for a quick setup. **The code is primarily provided for review of its architecture, logic, design patterns, and best practices employed in building the backend.**
-
-_Some identifiers and configurations have been generalized for this public portfolio presentation._
+> **About this repository:** This project was developed as an academic capstone and relies on AWS services and environment configurations that are not included here. The code is provided for review of its architecture, patterns, and engineering decisions, not as a turnkey deployment. Some identifiers and configurations have been generalized for this public presentation.
